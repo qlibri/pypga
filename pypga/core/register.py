@@ -248,7 +248,7 @@ class _NumberRegister(_Register):
         return int(value)
 
     def _to_python_array(self, value):
-        value = np.asarray(value)
+        value = np.asarray(value, dtype="float").copy()
         value -= self.offset_from_python
         if self.signed:
             value[value >= (1 << (self.width - 1))] -= 1 << self.width
