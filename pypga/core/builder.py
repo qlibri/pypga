@@ -40,6 +40,7 @@ class BaseBuilder(ABC):
 
     @property
     def result_exists(self):
+        logger.debug(f"Looking for existing build in {self.result_path}.")
         return self.result_path.is_dir()
 
     _build_results = []
