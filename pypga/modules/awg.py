@@ -83,12 +83,12 @@ def Awg(
             self.trigger = Signal(reset=0)
             self.out_trigger = Signal(reset=0)
             ###
-            _trigger = Signal(reset=0)
+            self._trigger = Signal(reset=0)
             self.comb += [
-                _trigger.eq(self.trigger | self.software_trigger | self.always_on)
+                self._trigger.eq(self.trigger | self.software_trigger | self.always_on)
             ]
             self.submodules.pulseburst = MigenPulseBurstGen(
-                trigger=_trigger,
+                trigger=self._trigger,
                 reset=False,
                 pulses=data_depth - 1,
                 period=self.sampling_period_cycles,
