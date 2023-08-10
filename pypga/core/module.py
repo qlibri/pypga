@@ -163,6 +163,7 @@ class TopModule(Module):
         cls,
         *args,
         host=None,
+        password=None,
         board=DEFAULT_BOARD,
         autobuild=True,
         forcebuild=False,
@@ -181,7 +182,7 @@ class TopModule(Module):
         if host is None:
             interface = LocalInterface(result_path=builder.result_path)
         else:
-            interface = RemoteInterface(host=host, result_path=builder.result_path)
+            interface = RemoteInterface(host=host, password=password, result_path=builder.result_path)
         return cls(*args, interface=interface, **kwargs)
 
     def stop(self):
