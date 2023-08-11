@@ -21,6 +21,7 @@ class _Register(CustomizableMixin):
             reset=self.default if self.depth == 1 else 0, 
             name=name,
         )
+        setattr(module, name, value_signal)
         if omit_csr:
             return
         if self.depth == 1:
@@ -116,7 +117,8 @@ class _Register(CustomizableMixin):
         return f"{parents[0]}.{'_'.join(parents[1:] + [self.name])}_csr"
 
     def to_python(self, value):
-        return value - self.offset_from_python
+        value -= self.offset_from_python
+        return value
 
     def _to_python_array(self, value):
         """Faster version of to_python() for arrays can be implented here in subclasses"""
