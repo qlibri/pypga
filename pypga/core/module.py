@@ -150,7 +150,7 @@ class Module:
     def sim(cls, num_steps, query, platform = GenericPlatform, soc = None, omit_csr = True):
         from migen.sim import run_simulation
         
-        module = AutoMigenModule(cls, platform, soc, omit_csr = True)
+        module = AutoMigenModule(cls, platform, soc, omit_csr = omit_csr)
         t = []
         results = {k: [] for k in query}
         
@@ -195,7 +195,7 @@ class Module:
     
     @classmethod
     def vis(cls, fname, platform = GenericPlatform, soc = None, omit_csr = True):
-        from migen.fhdl.structure import _Assign, Signal, _Operator, Constant, If, Case, Cat
+        from migen.fhdl.structure import _Assign, Signal, _Operator, Constant, If, Case, Cat, _Slice
         
         if os.path.splitext(fname)[1] != '.pdf':
             raise ValueError('Only PDF output is supported.')
@@ -288,6 +288,9 @@ class Module:
                     edges.update(e)
                 
             return nodes, edges
+        
+        def handle_slice(s):
+            return handle_signal(s.value)
                 
         handler_mapping = {_Assign: handle_assign,
                            Signal: handle_signal,
@@ -295,12 +298,13 @@ class Module:
                            Constant: handle_constant, 
                            If: handle_if,
                            Case: handle_case,
-                           Cat: handle_cat}
+                           Cat: handle_cat,
+                           _Slice: handle_slice}
         
         nodes = dict()
         sync_edges = set()
         comb_edges = set()
-        module = AutoMigenModule(cls, platform, soc, omit_csr = True)
+        module = AutoMigenModule(cls, platform, soc, omit_csr = omit_csr)
 
         for s in module.sync._fm._fragment.sync['sys']:
             #print(s)

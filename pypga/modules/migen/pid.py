@@ -54,5 +54,7 @@ class MigenPid(MigenModule):
             self.int.eq(self.error * self.k_i_signal),
             self.int_sum.eq(self.int_sum + self.int),
             self.sum.eq(self.prop + self.int_sum),
+            # TODO: These are the LEAST significant bits of the sum.
+            # Is that intended?
             self.out.eq(self.sum[0:width]),  # need to add saturation and bitshift to find a good dynamic range
         ]
