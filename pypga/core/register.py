@@ -287,10 +287,10 @@ class _FixedPointRegister(_NumberRegister):
         value = float(value) / (2**self.decimals - 1)
         return value
 
-    # def _to_python_array(self, value):
-    #     value = _NumberRegister._to_python_array(self, value)
-    #     #value = np.array(value, dtype=float) / (2**self.decimals - 1) #somehow this fixed it
-    #     return value
+    def _to_python_array(self, value):
+        value = _NumberRegister._to_python_array(self, value)
+        value = np.array(value, dtype=float) / (2**self.decimals - 1)
+        return value
 
     def from_python(self, value):
         value = int(round(float(value) * (2**self.decimals - 1)))
