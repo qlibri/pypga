@@ -21,18 +21,17 @@ class _Register(CustomizableMixin):
             reset=self.default if self.depth == 1 else 0, 
             name=name,
         )
-        setattr(module, name, value_signal)
         if omit_csr:
             return
         if self.depth == 1:
             if self.readonly:
-                csr_instance = CSRStatus(
+                csr_instance = CSRStatus( #DOC: I can only read  this register
                     size=self.width, reset=self.default, name=name_csr
                 )
                 setattr(module, name_csr, csr_instance)
                 module.comb += csr_instance.status.eq(value_signal)
             else:
-                csr_instance = CSRStorage(
+                csr_instance = CSRStorage( #DOC: I can read and write this register
                     size=self.width, reset=self.default, name=name_csr
                 )
                 setattr(module, name_csr, csr_instance)
@@ -117,11 +116,10 @@ class _Register(CustomizableMixin):
         return f"{parents[0]}.{'_'.join(parents[1:] + [self.name])}_csr"
 
     def to_python(self, value):
-        value -= self.offset_from_python
-        return value
+        return value - self.offset_from_python
 
     def _to_python_array(self, value):
-        """Faster version of to_python() for arrays"""
+        """Faster version of to_python() for arrays can be implented here in subclasses"""
         return [self.to_python(v) for v in value]
 
     def from_python(self, value):
@@ -289,10 +287,10 @@ class _FixedPointRegister(_NumberRegister):
         value = float(value) / (2**self.decimals - 1)
         return value
 
-    def _to_python_array(self, value):
-        value = _NumberRegister._to_python_array(self, value)
-        value = np.array(value, dtype=float) / (2**self.decimals - 1)
-        return value
+    # def _to_python_array(self, value):
+    #     value = _NumberRegister._to_python_array(self, value)
+    #     #value = np.array(value, dtype=float) / (2**self.decimals - 1) #somehow this fixed it
+    #     return value
 
     def from_python(self, value):
         value = int(round(float(value) * (2**self.decimals - 1)))
@@ -307,4 +305,12 @@ NumberRegister = _NumberRegister.custom
 FixedPointRegister = _FixedPointRegister.custom
 
 
-# TODO: add explicit arguments to custom for type completion, or go with @dataclass for automatically doing this
+#Leo: can we somehow use dataclasses?
+
+from dataclasses import dataclass
+@dataclass
+class NewFixedPointRegister(_FixedPointRegister):
+    def test(self):
+        return self.min
+
+# TODO : Leo? add explicit arguments to custom for type completion, or go with @dataclass for automatically doing this

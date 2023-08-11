@@ -64,10 +64,6 @@ def scan_module_class(module_class) -> typing.Tuple[dict, dict, dict, dict]:
     return registers, logic, submodules, other
 
 
-def hash_module(module_class) -> str:
-    return "latest"
-
-
 class Module:
     @classmethod
     def __init_subclass__(cls):
@@ -101,7 +97,6 @@ class Module:
 
         cls.__init__ = new_init
         # 4. compute hash for module
-        cls._hash = hash_module(cls)
 
     def _init_module(self, name, parent, interface):
         """Initializes the pypga module hierarchy before the actual constructor is called."""
