@@ -2,6 +2,7 @@ import functools
 import logging
 import typing
 import os
+import inspect
 from typing import Callable
 from migen.build.generic_platform import GenericPlatform
 
@@ -151,6 +152,53 @@ class Module:
         return 0xA000000
     
     @classmethod
+    def sim(cls, num_steps, query, platform = GenericPlatform, soc = None, omit_csr = True):
+        from migen.sim import run_simulation
+        
+        module = AutoMigenModule(cls, platform, soc, omit_csr = True)
+        t = []
+        results = {k: [] for k in query}
+        
+        def getattr_(obj, lst):
+            """
+            Equivalent for getattr() for nested objects
+            """
+            if len(lst) == 1:
+                return getattr(obj, lst[0])
+            else:
+                return getattr_(getattr(obj, lst[0]), lst[1:])
+            
+        def sim():
+            """
+            Run simulation and store parameter values in global lists
+            """
+            for i in range(num_steps):
+                t.extend([i, i+1])
+                for k, v in query.items():
+                    # try:
+                    #     yield getattr_(module, k.split('.')).eq(v(i))
+                    #     val = (yield getattr_(module, k.split('.')))
+                    # except:
+                    if v is None:
+                        val = (yield getattr_(module, k.split('.')))
+                    if isinstance(v, dict):
+                        if i in v:
+                            yield getattr_(module, k.split('.')).eq(v[i])
+                        val = (yield getattr_(module, k.split('.')))
+                    if callable(v):
+                        arglist = inspect.getfullargspec(v).args
+                        kwargs = {}
+                        for arg in arglist[1:]:
+                            kwargs[arg] = (yield getattr_(module, arg.split('.')))
+                        yield getattr_(module, k.split('.')).eq(v(i, **kwargs))
+                        val = (yield getattr_(module, k.split('.')))
+                    results[k].extend([val]*2)
+                yield
+                
+        run_simulation(module, sim())
+        return t, results    
+    
+    @classmethod
     def vis(cls, fname, platform = GenericPlatform, soc = None, omit_csr = True):
         from migen.fhdl.structure import _Assign, Signal, _Operator, Constant, If, Case, Cat
         
@@ -158,7 +206,9 @@ class Module:
             raise ValueError('Only PDF output is supported.')
         
         def get_name(signal):
-            #print(signal.backtrace)
+            """
+            Get name of a signal, omitting common prefixes.
+            """
             pre = signal.backtrace[-2][0]
             if pre in ['automigenmodule', 'custom_numberregister', 'custom_fixedpointregister', 'custom_boolregister']:
                 pre = ''
@@ -255,10 +305,8 @@ class Module:
         nodes = dict()
         sync_edges = set()
         comb_edges = set()
-        
         module = AutoMigenModule(cls, platform, soc, omit_csr = True)
 
-    
         for s in module.sync._fm._fragment.sync['sys']:
             #print(s)
             handler = handler_mapping[type(s)]
