@@ -11,7 +11,7 @@ from .common import CustomizableMixin
 logger = logging.getLogger(__name__)
 
 class _Register(CustomizableMixin):
-    def _add_migen_commands(self, name, module):
+    def _add_migen_commands(self, name, module, omit_csr = False):
         name_csr = f"{name}_csr"
         if self.ram_offset is not None:
             # nothing to do, the register is simply an area in RAM
@@ -21,7 +21,8 @@ class _Register(CustomizableMixin):
             reset=self.default if self.depth == 1 else 0, 
             name=name,
         )
-        setattr(module, name, value_signal) #DOC: Set the register from the type hint with a migen signal
+        if omit_csr:
+            return
         if self.depth == 1:
             if self.readonly:
                 csr_instance = CSRStatus( #DOC: I can only read  this register
@@ -213,7 +214,7 @@ class _TriggerRegister(_Register):
             "Trigger register cannot be set - try calling instead to generate a soft trigger."
         )
 
-    def _add_migen_commands(self, name, module):
+    def _add_migen_commands(self, name, module, omit_csr = False):
         name_csr = f"{name}_csr"
         csr_instance = CSRStorage(size=self.width, reset=self.default, name=name_csr)
         setattr(module, name_csr, csr_instance)
@@ -246,12 +247,12 @@ class _NumberRegister(_Register):
                 value -= 1 << self.width
         return int(value)
 
-    # TODO: Leo: Does not work
-    #def _to_python_array(self, value):
-    #    value = np.asarray(value) - self.offset_from_python
-    #    if self.signed:
-    #        value[value >= (1 << (self.width - 1))] -= 1 << self.width
-    #    return value
+    def _to_python_array(self, value):
+        value = np.asarray(value, dtype="float").copy()
+        value -= self.offset_from_python
+        if self.signed:
+            value[value >= (1 << (self.width - 1))] -= 1 << self.width
+        return value
 
     def before_from_python(self, value):
         if self.max is not None and value > self.max:

@@ -10,11 +10,12 @@ from .sshshell import SshShell
 
 
 class RemoteInterface(BaseInterface):
-    def __init__(self, result_path: str = None, host: str = "127.0.0.1"):
+    def __init__(self, result_path: str = None, host: str = "127.0.0.1", password: str = "topsecret"):
         super().__init__(result_path)
         self.host = host
         self.server = Server(
             host=host,
+            password=password,
             bitstreamfile=self.build_result_path / Server._bitstreamname,
         )
         self.client = Client(host=host, token=self.server.token)

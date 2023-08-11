@@ -26,6 +26,7 @@ def Awg(
     data_depth: int = 1024,
     data_width: int = 14,
     data_decimals: int = 0,
+    data_signed=True,
     initial_data: list = None,
     sampling_period_width=32,
     default_sampling_period_cycles=10,
@@ -57,7 +58,7 @@ def Awg(
             default=initial_data,
             reverse=True,
             readonly=False,
-            signed=True,
+            signed=data_signed,
             decimals=data_decimals,
         )
         sampling_period_cycles: NumberRegister(
@@ -72,7 +73,7 @@ def Awg(
             readonly=True,
             default=0,
             doc="the current output value",
-            signed=True,
+            signed=data_signed,
         )
         always_on: BoolRegister(default=False)
         software_trigger: TriggerRegister()
@@ -83,12 +84,12 @@ def Awg(
             self.trigger = Signal(reset=0)
             self.out_trigger = Signal(reset=0)
             ###
-            _trigger = Signal(reset=0)
+            self._trigger = Signal(reset=0)
             self.comb += [
-                _trigger.eq(self.trigger | self.software_trigger | self.always_on)
+                self._trigger.eq(self.trigger | self.software_trigger | self.always_on)
             ]
             self.submodules.pulseburst = MigenPulseBurstGen(
-                trigger=_trigger,
+                trigger=self._trigger,
                 reset=False,
                 pulses=data_depth - 1,
                 period=self.sampling_period_cycles,

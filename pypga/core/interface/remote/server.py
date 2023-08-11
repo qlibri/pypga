@@ -7,7 +7,6 @@ from paramiko import SSHException
 from scp import SCPException
 
 from .sshshell import SshShell
-import pypga
 
 
 class Server:
@@ -24,14 +23,14 @@ class Server:
     def put(self, src, dst):
         self.shell.scp.put(src, dst)
 
-    def __init__(self, host, port=2222, delay=0.05, bitstreamfile=None, start=True):
+    def __init__(self, host, password, port=2222, delay=0.05, bitstreamfile=None, start=True):
         self._delay = delay
         self.port = port
         self.shell = SshShell(
             hostname=host,
             sshport=22,
-            user=pypga.config.user,
-            password=pypga.config.password,
+            user="root",
+            password=password,
             delay=delay,
         )
         self.stop()
