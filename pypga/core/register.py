@@ -11,7 +11,7 @@ from .common import CustomizableMixin
 logger = logging.getLogger(__name__)
 
 class _Register(CustomizableMixin):
-    def _add_migen_commands(self, name, module):
+    def _add_migen_commands(self, name, module, omit_csr = False):
         name_csr = f"{name}_csr"
         if self.ram_offset is not None:
             # nothing to do, the register is simply an area in RAM
@@ -22,6 +22,8 @@ class _Register(CustomizableMixin):
             name=name,
         )
         setattr(module, name, value_signal)
+        if omit_csr:
+            return
         if self.depth == 1:
             if self.readonly:
                 csr_instance = CSRStatus(
@@ -214,7 +216,7 @@ class _TriggerRegister(_Register):
             "Trigger register cannot be set - try calling instead to generate a soft trigger."
         )
 
-    def _add_migen_commands(self, name, module):
+    def _add_migen_commands(self, name, module, omit_csr = False):
         name_csr = f"{name}_csr"
         csr_instance = CSRStorage(size=self.width, reset=self.default, name=name_csr)
         setattr(module, name_csr, csr_instance)
