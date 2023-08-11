@@ -1,12 +1,15 @@
 import functools
 import logging
 import typing
+import os
 from typing import Callable
+from migen.build.generic_platform import GenericPlatform
 
 from .builder import get_builder
 from .interface import LocalInterface, RemoteInterface
 from .logic_function import is_logic
 from .register import _Register
+from .migen import AutoMigenModule
 
 logger = logging.getLogger(__name__)
 
@@ -146,6 +149,163 @@ class Module:
     def _ram_start(self):
         # TODO: generalize to multiple boards
         return 0xA000000
+    
+    @classmethod
+    def vis(cls, fname, platform = GenericPlatform, soc = None, omit_csr = True):
+        from migen.fhdl.structure import _Assign, Signal, _Operator, Constant, If, Case, Cat
+        
+        if os.path.splitext(fname)[1] != '.pdf':
+            raise ValueError('Only PDF output is supported.')
+        
+        def get_name(signal):
+            #print(signal.backtrace)
+            pre = signal.backtrace[-2][0]
+            if pre in ['automigenmodule', 'custom_numberregister', 'custom_fixedpointregister', 'custom_boolregister']:
+                pre = ''
+            else:
+                pre += '.'
+            return (pre + signal.backtrace[-1][0])
+        
+        def handle_signal(s):
+            return {get_name(s): {'nbits': s.nbits, 'signed': s.signed}}, set()
+        
+        def handle_constant(s):
+            # Don't include constants in visualization
+            return dict(), set()
+        
+        def handle_operator(s):
+            nodes = dict()
+            edges = set()
+            for o in s.operands:
+                handler = handler_mapping[type(o)]
+                n, e = handler(o)
+                nodes.update(n)
+                edges.update(e)
+                    
+            return nodes, edges
+        
+        def handle_assign(s):
+            nodes = dict()
+            edges = set()
+            
+            nl, el = handle_signal(s.l)
+            nodes.update(nl)
+            edges.update(el)
+            
+            handler = handler_mapping[type(s.r)]
+            nr, er = handler(s.r)
+            nodes.update(nr)
+            edges.update(er)
+            
+            for n in nr:
+                edges.add((n, next(iter(nl))))
+                
+            return nodes, edges
+        
+        def handle_cat(s):
+            nodes = dict()
+            edges = set()
+            
+            for r in s.l:
+                handler = handler_mapping[type(r)]
+                n, e = handler(r)
+                nodes.update(n)
+                edges.update(e)
+                
+            return nodes, edges
+                
+        def handle_if(s):
+            nodes = dict()
+            edges = set()
+            
+            for t in s.t:
+                handler = handler_mapping[type(t)]
+                n, e = handler(t)
+                nodes.update(n)
+                edges.update(e)
+            for f in s.f:
+                handler = handler_mapping[type(f)]
+                n, e = handler(f)
+                nodes.update(n)
+                edges.update(e)
+                
+            return nodes, edges
+        
+        def handle_case(s):
+            nodes = dict()
+            edges = set()
+            
+            for k, v in s.cases.items():
+                for r in v:
+                    handler = handler_mapping[type(r)]
+                    n, e = handler(r)
+                    nodes.update(n)
+                    edges.update(e)
+                
+            return nodes, edges
+                
+        handler_mapping = {_Assign: handle_assign,
+                           Signal: handle_signal,
+                           _Operator: handle_operator,
+                           Constant: handle_constant, 
+                           If: handle_if,
+                           Case: handle_case,
+                           Cat: handle_cat}
+        
+        nodes = dict()
+        sync_edges = set()
+        comb_edges = set()
+        
+        module = AutoMigenModule(cls, platform, soc, omit_csr = True)
+
+    
+        for s in module.sync._fm._fragment.sync['sys']:
+            #print(s)
+            handler = handler_mapping[type(s)]
+            n, e = handler(s)
+            nodes.update(n)
+            sync_edges.update(e)
+        
+        for s in module.sync._fm._fragment.comb:
+            #print(s)
+            handler = handler_mapping[type(s)]
+            n, e = handler(s)
+            nodes.update(n)
+            comb_edges.update(e)
+        
+        for s in module.comb._fm._fragment.sync['sys']:
+            #print(s)
+            handler = handler_mapping[type(s)]
+            n, e = handler(s)
+            nodes.update(n)
+            sync_edges.update(e)
+        
+        for s in module.comb._fm._fragment.comb:
+            #print(s)
+            handler = handler_mapping[type(s)]
+            n, e = handler(s)
+            nodes.update(n)
+            comb_edges.update(e)
+        
+        import graphviz
+        dot = graphviz.Digraph('DAQ')
+        
+        for k, v in nodes.items():
+            if v['signed']:
+                color = "lightcoral"
+            else:
+                color = "lightgreen"
+            dot.node(k, f"<<b>{k}</b><br/>bits={v['nbits']}<br/>signed={v['signed']}>", style="filled", fillcolor=color)
+            
+        for p in sync_edges:
+            a, b = p
+            dot.edge(a, b)
+            
+        for p in comb_edges:
+            a, b = p
+            dot.edge(a, b, color="black:none:black", arrowhead="none")
+            
+        dot.render(os.path.splitext(fname)[0], cleanup=True)
 
 
 DEFAULT_BOARD = "stemlab125_14"
