@@ -307,10 +307,10 @@ FixedPointRegister = _FixedPointRegister.custom
 
 #Leo: can we somehow use dataclasses?
 
-from dataclasses import dataclass
-@dataclass
-class NewFixedPointRegister(_FixedPointRegister):
-    def test(self):
-        return self.min
+# from dataclasses import dataclass
+# @dataclass
+# class NewFixedPointRegister(_FixedPointRegister):
+#     def test(self):
+#         return self.min
 
 # TODO : Leo? add explicit arguments to custom for type completion, or go with @dataclass for automatically doing this
