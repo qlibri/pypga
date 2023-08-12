@@ -205,14 +205,14 @@ class Module:
             Get name of a signal, omitting common prefixes.
             """
             pre = signal.backtrace[-2][0]
-            if pre in ['automigenmodule', 'custom_numberregister', 'custom_fixedpointregister', 'custom_boolregister']:
+            if pre.endswith('automigenmodule') or pre.endswith('custom_numberregister') or pre.endswith('custom_fixedpointregister') or pre.endswith('custom_boolregister'):
                 pre = ''
             else:
                 pre += '.'
             return (pre + signal.backtrace[-1][0])
         
         def handle_signal(s):
-            return {get_name(s): {'nbits': s.nbits, 'signed': s.signed}}, set()
+            return {str(id(s)): {'name': get_name(s), 'nbits': s.nbits, 'signed': s.signed}}, set()
         
         def handle_constant(s):
             # Don't include constants in visualization
