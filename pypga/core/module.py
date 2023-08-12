@@ -339,10 +339,10 @@ class Module:
         
         for k, v in nodes.items():
             if v['signed']:
-                color = "lightcoral"
+                color = "0.0 " + str(0.1 + 0.9*v['nbits']**2 / (400 + v['nbits']**2)) + " 0.9"
             else:
-                color = "lightgreen"
-            dot.node(k, f"<<b>{k}</b><br/>bits={v['nbits']}<br/>signed={v['signed']}>", style="filled", fillcolor=color)
+                color = "0.333 " + str(0.1 + 0.9*v['nbits']**2 / (400 + v['nbits']**2)) + " 0.9"
+            dot.node(k, f"<<b>{v['name']}</b><br/>bits={v['nbits']}<br/>signed={v['signed']}>", style="filled", fillcolor=color)
             
         for p in sync_edges:
             a, b = p
