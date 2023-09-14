@@ -244,16 +244,27 @@ class _NumberRegister(_Register):
 
     def to_python(self, value):
         value = _Register.to_python(self, value)
+        if self.ram_offset is None:
+            width=self.width
+        else:
+            width=32 # it is always transferred as 32bit when coming from RAM DMA 
+            #TODO: fix this some time
         if self.signed:
-            if value >= (1 << (self.width - 1)):
-                value -= 1 << self.width
+            if value >= (1 << (width - 1)):
+                value -= 1 << width
+        #print(self.width, self.decimals, value, self.signed)                
         return int(value)
 
+    
     def _to_python_array(self, value):
+        if self.ram_offset is None:
+            width=self.width
+        else:
+            width=32 # it is always transferred as 32bit when coming from RAM
         value = np.asarray(value, dtype="float").copy()
         value -= self.offset_from_python
         if self.signed:
-            value[value >= (1 << (self.width - 1))] -= 1 << self.width
+            value[value >= (1 << (width - 1))] -= 1 << width
         return value
 
     def before_from_python(self, value):
@@ -293,11 +304,40 @@ class _FixedPointRegister(_NumberRegister):
         value = _NumberRegister._to_python_array(self, value)
         value = np.array(value, dtype=float) / (2**self.decimals - 1)
         return value
+    
+    # def _to_python_array(self, value):
+    #     """Faster version of to_python() for arrays can be implented here in subclasses"""
+    #     return [self.to_python(v) for v in value]    
 
     def from_python(self, value):
+        rawvalue=value
         value = int(round(float(value) * (2**self.decimals - 1)))
         value = _NumberRegister.from_python(self, value)
+        #print("from python",rawvalue,value,bin(value))
         return value
+    
+    
+# class _FixedPointRegister_minmax(_NumberRegister):
+#     decimals: int = 0
+#     min: float = None
+#     max: float = None
+
+#     def to_python(self, value):
+#         value = _NumberRegister.to_python(self, value)
+#         value = float(value) / (2**(self.width)) * (self.max-self.min) + self.min
+#         return value
+
+#     def _to_python_array(self, value):
+#         value = _NumberRegister._to_python_array(self, value)
+#         value = np.array(value, dtype=float) / (2**self.decimals - 1)
+#         return value
+
+#     def from_python(self, value):
+#         rawvalue=value
+#         value = int(round(float(value) * (2**self.decimals - 1)))
+#         value = _NumberRegister.from_python(self, value)
+#         print("from python",rawvalue,value,bin(value))
+#         return value    
 
 
 Register = _Register.custom
