@@ -144,6 +144,7 @@ class _Register(CustomizableMixin):
             return self
         if self.depth == 1 and self.ram_offset is None:
             value = instance._interface.read(self._get_full_name(instance))
+            #print("get raw value", self.name, value)
             return self.to_python(value)
         else:
             if self.ram_offset is None:
@@ -164,6 +165,8 @@ class _Register(CustomizableMixin):
         if self.depth == 1:
             value = self.from_python(self.before_from_python(value))
             instance._interface.write(self._get_full_name(instance), value)
+            #self.raw_int_value=value
+            #print("set raw value to", value)
         else:
             if self.reverse:
                 value = reversed(value)
@@ -279,11 +282,11 @@ class _NumberRegister(_Register):
     def from_python(self, value):
         # saturate at the integer level
         if value < self._int_min:
-            value = self._int_min
-            logger.warning(f"Negative saturation for {self.name}")
+            logger.warning(f"Negative saturation for {self.name}: {value} < {self._int_min} ")
+            value = self._int_min            
         elif value > self._int_max:
+            logger.warning(f"Positive saturation for {self.name}: {value} > {self._int_max}")
             value = self._int_max
-            logger.warning(f"Positive saturation for {self.name}")
         if self.signed and value < 0:
             value += 1 << self.width
         value = _Register.from_python(self, value)
