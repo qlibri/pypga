@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from pydantic import BaseSettings
+from pydantic.v1 import BaseSettings
 
 ROOT_PATH = Path(__file__).parent.parent.parent.resolve()
 
