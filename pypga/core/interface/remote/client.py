@@ -8,7 +8,7 @@ import numpy as np
 
 
 class Client:
-    def __init__(self, token, host="127.0.0.1", port=2222, timeout=1.0):
+    def __init__(self, token, host="127.0.0.1", port=2222, timeout=10.0):
         if len(token) != 32:
             raise ValueError("token must have 32 characters, not {len(token)}.")
         self._token = token
@@ -153,7 +153,7 @@ class Client:
             try:
                 self._clear_socket()
             finally:
-                raise RuntimeError(f"Error: wrong control sequence from server: {ack}")
+                raise RuntimeError(f"Error: wrong control sequence from server, expceted: {header}, got: {ack}")
 
     def _clear_socket(self):
         total_bytes_cleared = 0
