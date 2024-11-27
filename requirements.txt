@@ -4,7 +4,7 @@ scp
 numpy
 six
 ipython
+wheel
 https://github.com/qlibri/misoc/archive/master.zip
 https://github.com/qlibri/migen/archive/master.zip
 https://github.com/qlibri/migen-axi/archive/master.zip
-wheel
