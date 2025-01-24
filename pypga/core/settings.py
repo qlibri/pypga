@@ -1,6 +1,10 @@
 from pathlib import Path
 
-from pydantic.v1 import BaseSettings
+try:
+    from pydantic.v1 import BaseSettings
+except ModuleNotFoundError:
+    from pydantic import BaseSettings
+    
 
 ROOT_PATH = Path(__file__).parent.parent.parent.resolve()
 
