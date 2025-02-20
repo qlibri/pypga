@@ -48,7 +48,12 @@ def Awg(
         sampling_period: the sampling period.
 
     Output signals:
-        value: a signal with the ROM value at the current index.
+        out: a signal with the ROM value at the current index.
+
+
+    software_trigger: a trigger to manually trigger the AWG.
+
+
     """
 
     class _Awg(Module):
