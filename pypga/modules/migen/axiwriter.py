@@ -36,6 +36,8 @@ class MigenAxiWriter(MigenModule):
         self.w_valid = Signal()
         self.aw_ready = Signal()
         self.w_ready = Signal()
+        
+        self._address = Signal(32) #For debugging purposes: read out the address in the testbench
 
         ###
         # fifo = ClockDomainsRenamer({"write": "sys", "read": "sys"})(
@@ -73,6 +75,7 @@ class MigenAxiWriter(MigenModule):
         self.comb += [
             aw.id.eq(0),
             aw.addr.eq(address),
+            self._address.eq(address),
             aw.len.eq(
                 0
             ),  # Number of transfers in burst (0->1 transfer, 1->2 transfers ...)
