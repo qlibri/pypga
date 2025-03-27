@@ -118,8 +118,8 @@ def RAMREADER(
         )
         valid_data: BoolRegister()
         
-        ar_accepted = BoolRegister()
-        read_returned = BoolRegister()
+        ar_accepted: BoolRegister()
+        read_returned: BoolRegister()
 
 
         @logic
