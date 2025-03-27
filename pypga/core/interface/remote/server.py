@@ -42,9 +42,10 @@ class Server:
             self.start()
 
     def stop(self):
-        self.token = None
-        self.run("\x03")  # exit running server application
+        # self.token = None
+        # self.run("\x03")  # exit running server application
         self.run("killall server")  # make sure no other server blocks the port
+        pass
 
     @property
     def bitstream_flashed_recently(self) -> bool:

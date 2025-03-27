@@ -19,6 +19,7 @@ class RemoteInterface(BaseInterface):
             bitstreamfile=self.build_result_path / Server._bitstreamname,
         )
         self.client = Client(host=host, token=self.server.token)
+        # self.client = Client(host=host, token='d29c7af05ad846019ce75652f49474f6')
         self._extra_shell = None  # lazy instantiation
 
     def read_from_address(self, address: int, length: int = 1) -> Union[int, List[int]]:

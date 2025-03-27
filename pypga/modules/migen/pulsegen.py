@@ -101,6 +101,7 @@ class MigenPulseBurstGen(MigenModule):
             high_after_on=False,
             first_cycle_period_offset=1,
         )
+        
         self.sync += [
             self.out.eq(0),
             pulsegen_on.eq(~reset & (self.busy | trigger)),
