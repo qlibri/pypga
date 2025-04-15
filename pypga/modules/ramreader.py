@@ -95,7 +95,7 @@ from pypga.core import (
     logic,
     If
 )
-from pypga.core.register import TriggerRegister
+from pypga.core.register import TriggerRegister, BoolRegister
 from pypga.modules.migen.pulsegen import MigenPulseBurstGen
 from pypga.modules.migen.axireader import MigenAxiReader
 from typing import Optional
@@ -120,6 +120,13 @@ def RAMREADER(
         
         ar_accepted: BoolRegister()
         read_returned: BoolRegister()
+        
+        ar_fired: BoolRegister()
+        read_fired: BoolRegister()
+        ar_ready_flag: BoolRegister()
+        ar_valid_flag: BoolRegister()
+        r_valid_flag: BoolRegister()
+
 
 
         @logic
@@ -133,18 +140,20 @@ def RAMREADER(
             ram_base_address = Constant(_ram_start_address + axi_hp_index * 0x800000, 32)
             ram_mask = Constant(_ram_size - 1, 32)
 
+            self.comb += read_enable.eq(1)
+
             # Generate increasing addresses
             self.sync += [
                 counter.eq(counter + 1),
-                read_enable.eq(1),
                 address.eq(
                     ram_base_address |
                     (ram_mask & Cat(Constant(0, 3), counter, Constant(0, 32)))
                 )
             ]            
 
+
             self.submodules.axireader = MigenAxiReader(
-                address=address,
+                address=Constant(0x00100000, 32),
                 re=read_enable,
                 reset=0,
                 axi_hp=hp,
@@ -160,8 +169,11 @@ def RAMREADER(
             ]
 
             self.comb += [
-                self.ar_accepted.eq(self.axireader.ar_fired),
-                self.read_returned.eq(self.axireader.read_fired),
+                self.ar_fired.eq(self.axireader.ar_sent),
+                self.read_fired.eq(self.axireader.read_received),
+                self.ar_valid_flag.eq(self.axireader.ar_is_valid),
+                self.ar_ready_flag.eq(self.axireader.ar_is_ready),
+                self.r_valid_flag.eq(self.axireader.r_is_valid),
             ]
 
         @property
