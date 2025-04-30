@@ -56,7 +56,7 @@ class MigenPulseGen(MigenModule):
                 self.carry | self.restart,  # restart countdown
                 self.carry.eq(0),
                 self.count.eq(period),
-                self.restart.eq(0),                
+                If(self.restart, self.restart.eq(0))
             )
             .Else(  # regular countdown
                 Cat(self.count, self.carry).eq(Cat(self.count, 0) - 1),
