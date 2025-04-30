@@ -44,6 +44,7 @@ class MigenPulseGen(MigenModule):
 
         self.count = Signal(width, reset=period_reset)
         self.carry = Signal(1, reset=high_after_on)
+        self.restart = Signal(1, reset=0)
         self.sync += [
             self.out.eq(self.carry & on),
             If(
@@ -52,13 +53,15 @@ class MigenPulseGen(MigenModule):
                 self.count.eq(period - first_cycle_period_offset),
             )
             .Elif(
-                self.carry,  # restart countdown
+                self.carry | self.restart,  # restart countdown
                 self.carry.eq(0),
                 self.count.eq(period),
+                self.restart.eq(0),                
             )
             .Else(  # regular countdown
                 Cat(self.count, self.carry).eq(Cat(self.count, 0) - 1),
             ),
+            
         ]
 
 
