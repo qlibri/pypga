@@ -51,7 +51,7 @@ class MigenPulseGen(MigenModule):
                 on == 0 | self.restart,  # prepare for the first pulse when off
                 self.carry.eq(high_after_on),
                 self.count.eq(period - first_cycle_period_offset),
-                If(self.restart, self.restart.eq(0))
+                #If(self.restart, self.restart.eq(0))
             )
             .Elif(
                 self.carry,  # restart countdown
