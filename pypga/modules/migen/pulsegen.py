@@ -48,17 +48,19 @@ class MigenPulseGen(MigenModule):
         self.sync += [
             self.out.eq(self.carry & on),
             If(
-                on == 0 | self.restart,  # prepare for the first pulse when off
+                on == 0,  # prepare for the first pulse when off
                 self.carry.eq(high_after_on),
                 self.count.eq(period - first_cycle_period_offset),
                 #If(self.restart, self.restart.eq(0))
             )
             .Elif(
-                self.carry,  # restart countdown
+                self.carry | self.restart,  # restart countdown
                 self.carry.eq(0),
                 self.count.eq(period)
             )
             .Else(  # regular countdown
+                #This line is implementing a multi-bit counter with carry/borrow:
+                #This behaves like a counter with underflow detection, where carry can signal that the counter has gone below zero.
                 Cat(self.count, self.carry).eq(Cat(self.count, 0) - 1),
             ),
             
