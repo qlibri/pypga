@@ -383,7 +383,7 @@ class TopModule(Module):
                 builder.build()
             else:
                 raise ValueError(
-                    "The design you are trying to instantiate must be built first. Try "
+                    "The pypga FPGA design you are trying to instantiate must be built first. Try "
                     "running this function call with the argument ``autobuild=True``."
                 )
         if host is None:

@@ -55,6 +55,7 @@ class Builder(BaseBuilder):
         )
         self.soc._attach_top(self.top)
         logger.debug("Running vivado build...")
+        print("################ Re-Building the FPGA code as the FPGA code has been modified ##########")
         self.soc.build(build_dir=self.build_path, run=True)
         self._check_timing_constraints_are_met()
         self._export_register_addresses()
